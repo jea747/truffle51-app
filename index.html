@@ -79,9 +79,6 @@
     const users = {};
     for (let i = 1; i <= 23; i++) users[`user${i}`] = "123";
 
-    const milkAdmins = ["user17", "user22"];
-    const mealAdmin = "user11";
-
     const loginBox = document.querySelector(".login");
     const appBox = document.querySelector(".app");
     const loginMsg = document.getElementById("login-msg");
@@ -95,14 +92,6 @@
 
     function saveData(data) {
       localStorage.setItem("jea-data", JSON.stringify(data));
-    }
-
-    function setApproved(type) {
-      localStorage.setItem(`approval-${type}`, "true");
-    }
-
-    function isApproved(type) {
-      return localStorage.getItem(`approval-${type}`) === "true";
     }
 
     let currentUser = null;
@@ -156,47 +145,18 @@
         btn.innerText = text;
         btn.style.display = "block";
         btn.style.marginBottom = "10px";
-
         btn.onclick = () => {
-          // 관리자 승인 검사
-          if (
-            text === "우유 마셨다!" &&
-            !milkAdmins.includes(currentUser) &&
-            !isApproved("milk")
-          ) {
-            alert("아직 우유 관리자의 승인이 필요해요!");
-            return;
-          }
-          if (
-            text === "급식 다 먹었다!" &&
-            currentUser !== mealAdmin &&
-            !isApproved("meal")
-          ) {
-            alert("아직 급식 관리자의 승인이 필요해요!");
-            return;
-          }
-
-          // 20시간 제한 검사
           const nowSec = Math.floor(Date.now() / 1000);
           const last = data[currentUser].lastClicked?.[text] || 0;
           if (nowSec - last < 72000) {
             alert("20시간 뒤에 다시 누를 수 있어요!");
             return;
           }
-
           alert(msg);
           data[currentUser].count++;
           data[currentUser].lastClicked[text] = nowSec;
           saveData(data);
           updateStatus();
-
-          // 관리자 승인 체크
-          if (text === "우유 마셨다!" && milkAdmins.includes(currentUser)) {
-            setApproved("milk");
-          }
-          if (text === "급식 다 먹었다!" && currentUser === mealAdmin) {
-            setApproved("meal");
-          }
         };
         btnArea.appendChild(btn);
       });
@@ -205,6 +165,18 @@
     function updateStatus() {
       const count = data[currentUser]?.count || 0;
       document.getElementById("count").innerText = `이번 달 누적 클릭 수: ${count}`;
+    }
+
+    function getRating(count) {
+      if (count >= 100) return "1등급";
+      if (count >= 90) return "2등급";
+      if (count >= 80) return "3등급";
+      if (count >= 70) return "4등급";
+      if (count >= 60) return "5등급";
+      if (count >= 50) return "6등급";
+      if (count >= 40) return "7등급";
+      if (count >= 30) return "8등급";
+      return "9등급";
     }
 
     loginBox.style.display = "flex";
