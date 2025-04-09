@@ -63,7 +63,6 @@
     <p id="greeting"></p>
     <div id="buttons"></div>
     <p class="info" id="count"></p>
-    <p class="info" id="rank"></p>
     <button onclick="resetCount()">초기화</button>
     <button onclick="logout()">로그아웃</button>
   </div>
@@ -165,15 +164,7 @@
 
     function updateStatus() {
       const count = data[currentUser]?.count || 0;
-      const rating = getRating(count);
-      const all = Object.entries(data).map(([u, d]) => [u, d.count]);
-      all.sort((a, b) => b[1] - a[1]);
-      const rank = all.findIndex(([u]) => u === currentUser) + 1;
-
-      const rankList = all.map(([u, c], i) => `${i + 1}등: ${u} (${c}점)`).join("\n");
-
       document.getElementById("count").innerText = `이번 달 누적 클릭 수: ${count}`;
-      document.getElementById("rank").innerText = `나의 등수: ${rank}등, 신용 등급: ${rating}\n\n[전체 랭킹]\n${rankList}`;
     }
 
     function getRating(count) {
