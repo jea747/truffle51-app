@@ -78,14 +78,14 @@
     };
 
     const users = {};
-    for (let i = 1; i <= 23; i++) users[user${i}] = "123";
+    for (let i = 1; i <= 23; i++) users[`user${i}`] = "123";
 
     const loginBox = document.querySelector(".login");
     const appBox = document.querySelector(".app");
     const loginMsg = document.getElementById("login-msg");
 
     const now = new Date();
-    const currentMonth = ${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")};
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
     function loadData() {
       return JSON.parse(localStorage.getItem("jea-data") || "{}");
@@ -112,7 +112,7 @@
         saveData(data);
         loginBox.style.display = "none";
         appBox.style.display = "flex";
-        document.getElementById("greeting").innerText = ${id}님, 안녕하세요!;
+        document.getElementById("greeting").innerText = `${id}님, 안녕하세요!`;
         updateStatus();
         showButtons();
       } else {
@@ -169,11 +169,11 @@
       const all = Object.entries(data).map(([u, d]) => [u, d.count]);
       all.sort((a, b) => b[1] - a[1]);
       const rank = all.findIndex(([u]) => u === currentUser) + 1;
+      const rankList = all.map(([u, c], i) => `${i + 1}등: ${u} (${c}점)`).join("\n");
 
-      const rankList = all.map(([u, c], i) => ${i + 1}등: ${u} (${c}점)).join("\n");
-
-      document.getElementById("count").innerText = 이번 달 누적 클릭 수: ${count};
-      document.getElementById("rank").innerText = 나의 등수: ${rank}등, 신용 등급: ${rating}\n\n[전체 랭킹]\n${rankList};
+      document.getElementById("count").innerText = `이번 달 누적 클릭 수: ${count}`;
+      document.getElementById("rank").innerText =
+        `나의 등수: ${rank}등, 신용 등급: ${rating}\n\n[전체 랭킹]\n${rankList}`;
     }
 
     function getRating(count) {
