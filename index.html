@@ -6,189 +6,216 @@
   <title>트러플51 칭찬 앱</title>
   <style>
     body {
-      background-color: #fffde7;
-      font-family: "Arial", sans-serif;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: url('https://images.unsplash.com/photo-1535223289827-42f1e9919769?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
+      background-size: cover;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      padding: 30px;
-      color: #444;
+      min-height: 100vh;
     }
     h1 {
-      color: #ffca28;
-      font-size: 2em;
+      margin-top: 40px;
+      font-size: 2.5em;
+      color: #00ffc8;
+      text-shadow: 2px 2px 5px #000;
     }
-    .login, .app {
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      gap: 10px;
+    .box {
+      background: rgba(0, 0, 0, 0.6);
+      padding: 20px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px #00ffc8;
+      width: 90%;
       max-width: 400px;
-      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
     input, button {
-      padding: 10px 20px;
-      font-size: 1em;
-      border-radius: 20px;
+      padding: 12px;
+      border-radius: 10px;
       border: none;
-      outline: none;
-      width: 100%;
+      font-size: 1em;
     }
     button {
-      background-color: #ffe082;
+      background: #00ffc8;
+      color: #000;
+      font-weight: bold;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: all 0.3s ease;
     }
     button:hover {
-      background-color: #ffd54f;
+      background: #00c6a2;
+    }
+    .hidden {
+      display: none;
     }
     .info {
-      margin-top: 10px;
-      font-weight: bold;
-      white-space: pre-line;
+      white-space: pre-wrap;
     }
   </style>
 </head>
 <body>
-  <h1>🍌 트러플51 칭찬 앱</h1>
-
-  <div class="login">
+  <h1>🍀 트러플51 칭찬 앱</h1>
+  <div id="login" class="box">
     <input type="text" id="username" placeholder="아이디" />
     <input type="password" id="password" placeholder="비밀번호" />
     <button onclick="login()">로그인</button>
-    <p id="login-msg"></p>
+    <p id="loginMsg"></p>
   </div>
-
-  <div class="app">
+  <div id="main" class="box hidden">
     <p id="greeting"></p>
     <div id="buttons"></div>
-    <p class="info" id="count"></p>
-    <p class="info" id="rank"></p>
+    <p class="info" id="status"></p>
     <button onclick="resetCount()">초기화</button>
     <button onclick="logout()">로그아웃</button>
   </div>
-
+  <div id="adminPanel" class="box hidden">
+    <h3>📊 전체 학생 점수</h3>
+    <pre id="allScores"></pre>
+    <button onclick="logout()">로그아웃</button>
+  </div>
   <script>
-    const actions = {
-      "우유 마셨다!": "오! 우유를 마셨군 잘했다 칭구!",
-      "발표했다!": "오! 발표를 했군 잘했다 칭구!",
-      "양치했다!": "오! 양치를 했군 잘했다 칭구!",
-      "칭찬했다!": "오! 칭찬를 했군 잘했다 칭구!",
-      "급식 다 먹었다!": "오! 급식를 먹었군 잘했다 칭구!",
-    };
-
     const users = {};
     for (let i = 1; i <= 23; i++) users[`user${i}`] = "123";
+    users["rlarjsxo"] = "1q2w3e4r!"; // 선생님
 
-    const loginBox = document.querySelector(".login");
-    const appBox = document.querySelector(".app");
-    const loginMsg = document.getElementById("login-msg");
+    const managers = {
+      "우유 마셨다!": ["user10", "user19"],
+      "발표했다!": ["user3"],
+      "양치했다!": ["user3"],
+      "칭찬했다!": ["user3"],
+      "급식 다 먹었다!": ["user6"]
+    };
+
+    const actions = {
+      "우유 마셨다!": "우유를 마시다니 건강해!",
+      "발표했다!": "발표를 잘 해냈구나!",
+      "양치했다!": "깨끗한 이가 반짝!",
+      "칭찬했다!": "따뜻한 말을 건넸구나!",
+      "급식 다 먹었다!": "편식 안 해서 훌륭해!",
+    };
 
     const now = new Date();
-    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const currentPeriod = `${now.getFullYear()}-${Math.floor(now.getMonth() / 2)}`;
+    const loginBox = document.getElementById("login");
+    const mainBox = document.getElementById("main");
+    const adminPanel = document.getElementById("adminPanel");
+    const buttonsDiv = document.getElementById("buttons");
+    const statusText = document.getElementById("status");
+    const loginMsg = document.getElementById("loginMsg");
 
-    function loadData() {
-      return JSON.parse(localStorage.getItem("jea-data") || "{}");
-    }
-
-    function saveData(data) {
-      localStorage.setItem("jea-data", JSON.stringify(data));
-    }
-
+    let data = JSON.parse(localStorage.getItem("truffle-data") || "{}");
     let currentUser = null;
-    let data = loadData();
+
+    function saveData() {
+      localStorage.setItem("truffle-data", JSON.stringify(data));
+    }
 
     function login() {
       const id = document.getElementById("username").value;
       const pw = document.getElementById("password").value;
       if (users[id] === pw) {
         currentUser = id;
-        if (!data[id]) data[id] = { count: 0, month: currentMonth, lastClicked: {} };
-        if (data[id].month !== currentMonth) {
+        if (!data[id]) data[id] = { count: 0, last: {}, history: {}, period: currentPeriod };
+        if (data[id].period !== currentPeriod) {
+          data[id].history[data[id].period] = data[id].count;
           data[id].count = 0;
-          data[id].month = currentMonth;
-          data[id].lastClicked = {};
+          data[id].last = {};
+          data[id].period = currentPeriod;
+          saveData();
         }
-        saveData(data);
-        loginBox.style.display = "none";
-        appBox.style.display = "flex";
-        document.getElementById("greeting").innerText = `${id}님, 안녕하세요!`;
-        updateStatus();
-        showButtons();
+        loginBox.classList.add("hidden");
+        if (id === "rlarjsxo") {
+          showAdmin();
+        } else {
+          mainBox.classList.remove("hidden");
+          document.getElementById("greeting").innerText = `${id}님 환영해요!`;
+          updateStatus();
+          showButtons();
+        }
       } else {
-        loginMsg.innerText = "아이디 또는 비밀번호가 틀렸습니다.";
+        loginMsg.innerText = "로그인 실패!";
       }
     }
 
     function logout() {
       currentUser = null;
-      loginBox.style.display = "flex";
-      appBox.style.display = "none";
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
-    }
-
-    function resetCount() {
-      if (currentUser && data[currentUser]) {
-        data[currentUser].count = 0;
-        data[currentUser].lastClicked = {};
-        saveData(data);
-        updateStatus();
-        alert("카운트가 초기화되었습니다!");
-      }
+      loginBox.classList.remove("hidden");
+      mainBox.classList.add("hidden");
+      adminPanel.classList.add("hidden");
     }
 
     function showButtons() {
-      const btnArea = document.getElementById("buttons");
-      btnArea.innerHTML = "";
-      Object.entries(actions).forEach(([text, msg]) => {
+      buttonsDiv.innerHTML = "";
+      for (const [label, message] of Object.entries(actions)) {
         const btn = document.createElement("button");
-        btn.innerText = text;
-        btn.style.display = "block";
-        btn.style.marginBottom = "10px";
-        btn.onclick = () => {
-          const nowSec = Math.floor(Date.now() / 1000);
-          const last = data[currentUser].lastClicked?.[text] || 0;
-          if (nowSec - last < 72000) {
-            alert("20시간 뒤에 다시 누를 수 있어요!");
-            return;
-          }
-          alert(msg);
-          data[currentUser].count++;
-          data[currentUser].lastClicked[text] = nowSec;
-          saveData(data);
-          updateStatus();
-        };
-        btnArea.appendChild(btn);
-      });
+        btn.innerText = label;
+        btn.onclick = () => handleClick(label, message);
+        buttonsDiv.appendChild(btn);
+      }
+    }
+
+    function handleClick(action, message) {
+      const nowSec = Math.floor(Date.now() / 1000);
+      const last = data[currentUser].last[action] || 0;
+      if (nowSec - last < 36000) {
+        alert("10시간 후에 다시 누를 수 있어요!");
+        return;
+      }
+      const mgrs = managers[action] || [];
+      if (!mgrs.includes(currentUser)) {
+        alert(`이 행동은 관리자(${mgrs.join(", ")})만 승인할 수 있어요.`);
+        return;
+      }
+      data[currentUser].last[action] = nowSec;
+      data[currentUser].count++;
+      saveData();
+      alert(message);
+      updateStatus();
+    }
+
+    function resetCount() {
+      data[currentUser].history[data[currentUser].period] = data[currentUser].count;
+      data[currentUser].count = 0;
+      data[currentUser].last = {};
+      saveData();
+      updateStatus();
     }
 
     function updateStatus() {
-      const count = data[currentUser]?.count || 0;
-      const rating = getRating(count);
-      const all = Object.entries(data).map(([u, d]) => [u, d.count]);
-      all.sort((a, b) => b[1] - a[1]);
-      const rank = all.findIndex(([u]) => u === currentUser) + 1;
-      const rankList = all.map(([u, c], i) => `${i + 1}등: ${u} (${c}점)`).join("\n");
-
-      document.getElementById("count").innerText = `이번 달 누적 클릭 수: ${count}`;
-      document.getElementById("rank").innerText =
-        `나의 등수: ${rank}등, 신용 등급: ${rating}\n\n[전체 랭킹]\n${rankList}`;
+      const count = data[currentUser].count;
+      const history = data[currentUser].history || {};
+      const grade = getRating(count);
+      const scores = Object.entries(data).map(([u, d]) => [u, d.count]);
+      scores.sort((a, b) => b[1] - a[1]);
+      const rank = scores.findIndex(([u]) => u === currentUser) + 1;
+      const historyStr = Object.entries(history).map(([p, c]) => `${p}: ${c}점`).join("\n");
+      statusText.innerText = `현재 점수: ${count}점\n등수: ${rank}등\n등급: ${grade}\n지난 기록:\n${historyStr}`;
     }
 
-    function getRating(count) {
-      if (count >= 100) return "1등급";
-      if (count >= 90) return "2등급";
-      if (count >= 80) return "3등급";
-      if (count >= 70) return "4등급";
-      if (count >= 60) return "5등급";
-      if (count >= 50) return "6등급";
-      if (count >= 40) return "7등급";
-      if (count >= 30) return "8등급";
+    function showAdmin() {
+      adminPanel.classList.remove("hidden");
+      const output = Object.entries(data).map(
+        ([u, d]) => `${u}: ${d.count}점, 이전 기록: ${JSON.stringify(d.history)}`
+      ).join("\n");
+      document.getElementById("allScores").innerText = output;
+    }
+
+    function getRating(c) {
+      if (c >= 100) return "1등급";
+      if (c >= 90) return "2등급";
+      if (c >= 80) return "3등급";
+      if (c >= 70) return "4등급";
+      if (c >= 60) return "5등급";
+      if (c >= 50) return "6등급";
+      if (c >= 40) return "7등급";
+      if (c >= 30) return "8등급";
       return "9등급";
     }
-
-    loginBox.style.display = "flex";
   </script>
 </body>
 </html>
